@@ -1,0 +1,19 @@
+# Python virtual environment
+venv/
+ai-project/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Pygame/OS-specific files
+*.DS_Store  # macOS
+Thumbs.db   # Windows
+
+# IDE-specific files (VS Code)
+.vscode/
+
+# Miscellaneous
+*.log
+*.bak
