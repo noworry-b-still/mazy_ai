@@ -16,14 +16,14 @@ from config import (
     HEADER_COLOR,
 )
 from dropdown import Dropdown
-from game import BrainyMaze
+from game import MAZY_AI
 from ui_components import draw_maze, draw_scrollbar, draw_button
 
 pygame.init()
 # Start in fullscreen mode
 screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 WINDOW_WIDTH, WINDOW_HEIGHT = screen.get_size()
-pygame.display.set_caption("Brainy Maze")
+pygame.display.set_caption("MAZY AI")
 clock = pygame.time.Clock()
 
 
@@ -35,7 +35,7 @@ def main():
     dragging_scrollbar = False
 
     # Create a default game with 20x20
-    game = BrainyMaze(ROW_OPTIONS[2], COL_OPTIONS[2])
+    game = MAZY_AI(ROW_OPTIONS[2], COL_OPTIONS[2])
 
     # Create smaller dropdowns for Rows and Cols
     dropdown_width = 70  # Smaller width
@@ -265,7 +265,7 @@ def main():
                         scroll_y = max(0, min(max_scroll_y, scroll_y))
 
         # Update automated search algorithms
-        if game.mode in [1, 2, 4, 5, 6,7] and game.search_generator:
+        if game.mode in [1, 2, 4, 5, 6, 7] and game.search_generator:
             for _ in range(game.search_speed):
                 try:
                     next(game.search_generator)
@@ -280,7 +280,7 @@ def main():
         # Draw header
         header_height = 70
         pygame.draw.rect(screen, HEADER_COLOR, (0, 0, WINDOW_WIDTH, header_height))
-        title_surf = TITLE_FONT.render("Brainy Maze", True, BLACK)
+        title_surf = TITLE_FONT.render("MAZY AI", True, BLACK)
         screen.blit(title_surf, (20, 10))
 
         # Calculate maze area dimensions
