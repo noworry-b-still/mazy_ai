@@ -76,6 +76,8 @@ def main():
         ("Breadth-First Search", 2),
         ("A* Search - 1", 4),
         ("A* Search - 2", 5),
+        ("Uniform-Cost Search", 6),
+        ("Ant Colony Opt.", 7),
         ("New Maze", 0),
     ]
 
@@ -263,7 +265,7 @@ def main():
                         scroll_y = max(0, min(max_scroll_y, scroll_y))
 
         # Update automated search algorithms
-        if game.mode in [1, 2, 4, 5] and game.search_generator:
+        if game.mode in [1, 2, 4, 5, 6,7] and game.search_generator:
             for _ in range(game.search_speed):
                 try:
                     next(game.search_generator)

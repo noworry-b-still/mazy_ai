@@ -4,10 +4,12 @@ from maze import (
     select_paths,
     depth_first_search,
     breadth_first_search,
+    uniform_cost_search,
     a_star_search,
+    ant_colony_optimization,
     backtrack,
 )
-from config import MODE_IDLE, MODE_DFS, MODE_BFS, MODE_MANUAL, MODE_A1, MODE_A2
+from config import MODE_IDLE, MODE_DFS, MODE_BFS, MODE_MANUAL, MODE_A1, MODE_A2, MODE_UCS, MODE_ACO
 
 
 class BrainyMaze:
@@ -79,6 +81,14 @@ class BrainyMaze:
                 self.cols,
                 2,
             )
+        elif mode == MODE_UCS:  
+            self.search_generator = uniform_cost_search(
+                self.cell_map, self.search_map, self.paths_searched
+        )
+        elif mode == MODE_ACO:
+            self.search_generator = ant_colony_optimization(
+                self.cell_map, self.search_map, self.paths_searched, self.rows, self.cols
+        )
 
     def manual_move(self, key):
         """Handle manual movement through the maze."""

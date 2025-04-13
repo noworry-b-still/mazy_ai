@@ -31,6 +31,8 @@ MODE_BFS = 2
 MODE_MANUAL = 3
 MODE_A1 = 4
 MODE_A2 = 5
+MODE_UCS = 6  
+MODE_ACO = 7  
 
 # Window dimensions
 WINDOW_WIDTH = 1200
