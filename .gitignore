@@ -14,6 +14,9 @@ Thumbs.db   # Windows
 # IDE-specific files (VS Code)
 .vscode/
 
+build/
+dist/
+
 # Miscellaneous
 *.log
 *.bak
