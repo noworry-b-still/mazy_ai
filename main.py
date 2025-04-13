@@ -37,32 +37,37 @@ def main():
     # Create a default game with 20x20
     game = BrainyMaze(ROW_OPTIONS[2], COL_OPTIONS[2])
 
-    # Create dropdowns for Rows and Cols - position will be calculated based on screen size
-    dropdown_width = 120
-    dropdown_height = 30
-    dropdown_x = WINDOW_WIDTH - dropdown_width - 80
-    
-    # Create dropdowns with dynamic positioning
+    # Create smaller dropdowns for Rows and Cols
+    dropdown_width = 70  # Smaller width
+    dropdown_height = 25  # Smaller height
+    dropdown_gap = 30
+
+    # Create small font for dropdown
+    small_dropdown_font = pygame.font.SysFont("Arial", 16)
+
+    # Create dropdowns with side-by-side positioning
     row_dropdown = Dropdown(
-        x=dropdown_x,
-        y=130,
+        x=WINDOW_WIDTH - 2 * dropdown_width - dropdown_gap - 50,
+        y=160,
         w=dropdown_width,
         h=dropdown_height,
-        font=BUTTON_FONT,
+        font=small_dropdown_font,  # Use smaller font
         options=[str(r) for r in ROW_OPTIONS],
         selected_index=2,
-        z_index=10  # Higher z-index to ensure they appear on top
+        z_index=10,
+        dropdown_direction="up",  # Make the dropdown expand upward
     )
-    
+
     col_dropdown = Dropdown(
-        x=dropdown_x,
-        y=180,
+        x=WINDOW_WIDTH - dropdown_width - 50,
+        y=160,
         w=dropdown_width,
         h=dropdown_height,
-        font=BUTTON_FONT,
+        font=small_dropdown_font,  # Use smaller font
         options=[str(c) for c in COL_OPTIONS],
         selected_index=2,
-        z_index=10  # Higher z-index to ensure they appear on top
+        z_index=10,
+        dropdown_direction="up",  # Make the dropdown expand upward
     )
 
     # Algorithm buttons
@@ -73,7 +78,7 @@ def main():
         ("A* Search - 2", 5),
         ("New Maze", 0),
     ]
-    
+
     # Speed control buttons
     speed_buttons = [
         ("Slower", -1),
@@ -89,43 +94,58 @@ def main():
     while running:
         # Recalculate dynamic values for screen size
         WINDOW_WIDTH, WINDOW_HEIGHT = screen.get_size()
-        dropdown_x = WINDOW_WIDTH - dropdown_width - 80
-        row_dropdown.rect.x = dropdown_x
-        col_dropdown.rect.x = dropdown_x
-        
+
+        # Update dropdown positions
+        row_dropdown.rect.x = WINDOW_WIDTH - 2 * dropdown_width - dropdown_gap - 50
+        col_dropdown.rect.x = WINDOW_WIDTH - dropdown_width - 50
+
         # Calculate max scroll based on content
         content_height = max(WINDOW_HEIGHT, 700 + game.rows * 20)
         max_scroll_y = max(0, content_height - WINDOW_HEIGHT)
         if scroll_y > max_scroll_y:
             scroll_y = max_scroll_y
-            
+
         # Calculate button positions and sizes
         button_width = 220
         button_height = 40
         button_gap = 15
         sidebar_x = WINDOW_WIDTH - button_width - 50
-        
+
         # Position algorithm buttons
         buttons = []
-        by = 240
+        by = 210  # Start buttons further down to avoid dropdown conflicts
         for text, mode in button_data:
-            buttons.append((pygame.Rect(sidebar_x, by, button_width, button_height), text, mode))
+            buttons.append(
+                (pygame.Rect(sidebar_x, by, button_width, button_height), text, mode)
+            )
             by += button_height + button_gap
-        
-        # Position speed buttons
+
+        # Position speed buttons side by side
         speed_button_width = button_width // 2 - 5
         speed_buttons_rects = []
         for i, (text, change) in enumerate(speed_buttons):
             x_pos = sidebar_x + (i * (speed_button_width + 10))
-            speed_buttons_rects.append((pygame.Rect(x_pos, by, speed_button_width, button_height), text, change))
+            speed_buttons_rects.append(
+                (
+                    pygame.Rect(x_pos, by, speed_button_width, button_height),
+                    text,
+                    change,
+                )
+            )
         by += button_height + button_gap
-        
-        # Position control buttons
+
+        # Position control buttons side by side
         control_buttons_rects = []
         for i, (text, action) in enumerate(control_buttons):
             x_pos = sidebar_x + (i * (speed_button_width + 10))
-            control_buttons_rects.append((pygame.Rect(x_pos, by, speed_button_width, button_height), text, action))
-        
+            control_buttons_rects.append(
+                (
+                    pygame.Rect(x_pos, by, speed_button_width, button_height),
+                    text,
+                    action,
+                )
+            )
+
         # Handle events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -133,7 +153,7 @@ def main():
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     running = False
-                    
+
                 key_map = {
                     pygame.K_UP: "up",
                     pygame.K_w: "w",
@@ -155,7 +175,7 @@ def main():
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:  # Left click
                     mx, my = event.pos
-                    
+
                     # Check scrollbar clicks first
                     scrollbar_x = WINDOW_WIDTH - 20
                     if mx > scrollbar_x and mx < WINDOW_WIDTH:
@@ -164,7 +184,7 @@ def main():
                         # Handle dropdown events (check these first due to higher z-index)
                         changed_row = row_dropdown.handle_event(event, scroll_y)
                         changed_col = col_dropdown.handle_event(event, scroll_y)
-                        
+
                         if changed_row:
                             new_rows = ROW_OPTIONS[row_dropdown.selected_index]
                             game.rows = new_rows
@@ -184,7 +204,7 @@ def main():
                                         game.reset()
                                     else:
                                         game.start_search(mode)
-                            
+
                             # Check speed buttons
                             for rect, text, change in speed_buttons_rects:
                                 adjusted_rect = pygame.Rect(
@@ -192,10 +212,14 @@ def main():
                                 )
                                 if adjusted_rect.collidepoint(mx, my):
                                     if change < 0:
-                                        game.search_speed = max(1, game.search_speed // 2)
+                                        game.search_speed = max(
+                                            1, game.search_speed // 2
+                                        )
                                     else:
-                                        game.search_speed = min(60, game.search_speed * 2)
-                            
+                                        game.search_speed = min(
+                                            60, game.search_speed * 2
+                                        )
+
                             # Check control buttons
                             for rect, text, action in control_buttons_rects:
                                 adjusted_rect = pygame.Rect(
@@ -203,7 +227,10 @@ def main():
                                 )
                                 if adjusted_rect.collidepoint(mx, my):
                                     if action == "toggle_fullscreen":
-                                        if pygame.display.get_surface().get_flags() & pygame.FULLSCREEN:
+                                        if (
+                                            pygame.display.get_surface().get_flags()
+                                            & pygame.FULLSCREEN
+                                        ):
                                             screen = pygame.display.set_mode(
                                                 (1200, 800), pygame.RESIZABLE
                                             )
@@ -212,19 +239,21 @@ def main():
                                             screen = pygame.display.set_mode(
                                                 (0, 0), pygame.FULLSCREEN
                                             )
-                                            WINDOW_WIDTH, WINDOW_HEIGHT = screen.get_size()
+                                            WINDOW_WIDTH, WINDOW_HEIGHT = (
+                                                screen.get_size()
+                                            )
                                     elif action == "exit":
                                         running = False
-                                        
+
                 elif event.button == 4:  # Mouse wheel up
                     scroll_y = max(0, scroll_y - 30)
                 elif event.button == 5:  # Mouse wheel down
                     scroll_y = min(max_scroll_y, scroll_y + 30)
-                    
+
             elif event.type == pygame.MOUSEBUTTONUP:
                 if event.button == 1:
                     dragging_scrollbar = False
-                    
+
             elif event.type == pygame.MOUSEMOTION:
                 if dragging_scrollbar:
                     _, my = event.pos
@@ -232,7 +261,7 @@ def main():
                         scroll_ratio = my / WINDOW_HEIGHT
                         scroll_y = int(scroll_ratio * max_scroll_y)
                         scroll_y = max(0, min(max_scroll_y, scroll_y))
-        
+
         # Update automated search algorithms
         if game.mode in [1, 2, 4, 5] and game.search_generator:
             for _ in range(game.search_speed):
@@ -242,16 +271,16 @@ def main():
                     game.mode = 0
                     game.search_generator = None
                     break
-        
+
         # Fill background
         screen.fill(BACKGROUND_COLOR)
-        
+
         # Draw header
         header_height = 70
         pygame.draw.rect(screen, HEADER_COLOR, (0, 0, WINDOW_WIDTH, header_height))
         title_surf = TITLE_FONT.render("Brainy Maze", True, BLACK)
         screen.blit(title_surf, (20, 10))
-        
+
         # Calculate maze area dimensions
         margin_left = 50
         margin_top = header_height + 30
@@ -261,7 +290,7 @@ def main():
         cell_size = min(available_w // game.cols, available_h // game.rows)
         maze_width = cell_size * game.cols
         maze_height = cell_size * game.rows
-        
+
         # Draw maze
         draw_maze(
             screen,
@@ -273,21 +302,21 @@ def main():
             margin_top - scroll_y,
             cell_size,
         )
-        
-        # Draw dropdowns
-        row_dropdown.draw(screen, "Rows:", scroll_y)
-        col_dropdown.draw(screen, "Cols:", scroll_y)
-        
+
+        # Draw dropdowns with compact labels
+        row_dropdown.draw(screen, "R:", scroll_y)  # Shorter label
+        col_dropdown.draw(screen, "C:", scroll_y)  # Shorter label
+
         # Draw algorithm buttons
         mouse_x, mouse_y = pygame.mouse.get_pos()
-        
+
         for rect, text, mode in buttons:
             adjusted_rect = pygame.Rect(
                 rect.x, rect.y - scroll_y, rect.width, rect.height
             )
             is_hovered = adjusted_rect.collidepoint(mouse_x, mouse_y)
             draw_button(screen, adjusted_rect, text, BUTTON_FONT, is_hovered)
-        
+
         # Draw speed buttons
         for rect, text, change in speed_buttons_rects:
             adjusted_rect = pygame.Rect(
@@ -295,7 +324,7 @@ def main():
             )
             is_hovered = adjusted_rect.collidepoint(mouse_x, mouse_y)
             draw_button(screen, adjusted_rect, text, BUTTON_FONT, is_hovered)
-        
+
         # Draw control buttons
         for rect, text, action in control_buttons_rects:
             adjusted_rect = pygame.Rect(
@@ -303,27 +332,33 @@ def main():
             )
             is_hovered = adjusted_rect.collidepoint(mouse_x, mouse_y)
             draw_button(screen, adjusted_rect, text, BUTTON_FONT, is_hovered)
-        
+
         # Draw search speed display
         speed_text = f"Search Speed: {game.search_speed}"
         speed_surf = TEXT_FONT.render(speed_text, True, BLACK)
         screen.blit(speed_surf, (sidebar_x, by + button_height + 10 - scroll_y))
-        
+
         # Draw scrollbar if needed
         if content_height > WINDOW_HEIGHT:
             draw_scrollbar(screen, content_height, WINDOW_HEIGHT, scroll_y)
-        
+
         # Draw footer with instructions
         footer_y = WINDOW_HEIGHT - 70
         footer_height = 70
-        pygame.draw.rect(screen, HEADER_COLOR, (0, footer_y, WINDOW_WIDTH, footer_height))
-        
+        pygame.draw.rect(
+            screen, HEADER_COLOR, (0, footer_y, WINDOW_WIDTH, footer_height)
+        )
+
         # Draw instructions in footer
-        instr1 = TEXT_FONT.render("Use W/A/S/D or Arrow keys to move manually!", True, BLACK)
-        instr2 = TEXT_FONT.render("Or click algorithm buttons to visualize search!", True, BLACK)
+        instr1 = TEXT_FONT.render(
+            "Use W/A/S/D or Arrow keys to move manually!", True, BLACK
+        )
+        instr2 = TEXT_FONT.render(
+            "Or click algorithm buttons to visualize search!", True, BLACK
+        )
         screen.blit(instr1, (margin_left, footer_y + 10))
         screen.blit(instr2, (margin_left, footer_y + 40))
-        
+
         # Draw A* search info
         note_y = margin_top + maze_height + 20 - scroll_y
         if note_y < footer_y - 100:  # Only show if there's room
@@ -335,10 +370,10 @@ def main():
             for i, line in enumerate(note_lines):
                 note_surf = SMALL_FONT.render(line, True, BLACK)
                 screen.blit(note_surf, (margin_left, note_y + i * 20))
-        
+
         pygame.display.flip()
         clock.tick(60)
-        
+
     pygame.quit()
     sys.exit()
 
