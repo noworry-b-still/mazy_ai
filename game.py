@@ -47,6 +47,8 @@ class BrainyMaze:
             for _ in range(self.rows * self.cols)
         ]
         self.paths_searched = []
+        # Mark start cell as searched but not part of solution initially
+        self.search_map[0]["searched"] = True
 
     def start_search(self, mode):
         self.initialize_search()
@@ -79,18 +81,26 @@ class BrainyMaze:
             )
 
     def manual_move(self, key):
+        """Handle manual movement through the maze."""
         if self.mode != MODE_MANUAL:
+            # Initialize for manual mode if we weren't in it before
             self.initialize_search()
             self.mode = MODE_MANUAL
             self.search_map[0]["searched"] = True
+
         if not self.work_list:
             return
+
+        # Get the current cell we're on
         last_cell = self.work_list[-1]
         last_idx = last_cell["cell"]
         neighbors = last_cell["neighbors"]
         exit_idx = self.rows * self.cols - 1
+
+        # Determine which direction to move based on key
         moved = False
         neighbor_idx = -1
+
         if (key == "up" or key == "w") and neighbors.top["connection"]:
             neighbor_idx = neighbors.top["neighborIndex"]
             moved = True
@@ -104,18 +114,47 @@ class BrainyMaze:
             neighbor_idx = neighbors.right["neighborIndex"]
             moved = True
         else:
-            return
+            return  # Invalid move, no connection in that direction
+
         if moved and neighbor_idx != -1:
+            # Check if we're moving to a cell we've already visited
             if self.search_map[neighbor_idx]["searched"]:
-                self.search_map[last_idx]["inSolution"] = False
-                self.work_list.pop()
+                # We're backtracking - Check if it's the previous cell in our path
+                if (
+                    len(self.work_list) > 1
+                    and self.work_list[-2]["cell"] == neighbor_idx
+                ):
+                    # Valid backtracking - remove current cell from the work list
+                    backtracked_cell = self.work_list.pop()
+                    # Clear the "searched" flag for the cell we're leaving
+                    self.search_map[backtracked_cell["cell"]]["searched"] = False
+                    self.search_map[backtracked_cell["cell"]]["inSolution"] = False
+
+                    # Also remove this path from paths_searched
+                    for i in range(len(self.paths_searched) - 1, -1, -1):
+                        if self.paths_searched[i]["to"] == backtracked_cell["cell"]:
+                            self.paths_searched.pop(i)
+                            break
+                # If not a direct previous cell, don't allow the move
             else:
+                # We're moving to a new unvisited cell
+                # Mark it as searched (blue)
                 self.search_map[neighbor_idx]["searched"] = True
+                # Add to our path
                 self.work_list.append(
                     {"cell": neighbor_idx, "neighbors": self.cell_map[neighbor_idx]}
                 )
+                # Track this path for potential solution reconstruction
                 self.paths_searched.append({"from": last_idx, "to": neighbor_idx})
+
+            # Check if we've reached the exit
             if neighbor_idx == exit_idx:
+                # We've reached the destination, highlight the solution path
+                # Clear all solution flags first
+                for i in range(len(self.search_map)):
+                    self.search_map[i]["inSolution"] = False
+
+                # Use backtrack to highlight the path from start to exit
                 self.search_map[exit_idx]["inSolution"] = True
                 backtrack(self.search_map, self.paths_searched, exit_idx)
-                self.mode = MODE_IDLE
+                self.mode = MODE_IDLE  # Done with manual mode
