@@ -1,3 +1,4 @@
+
 # MAZY AI: AI Pathfinding Visualization
 
 ## Overview
@@ -15,6 +16,11 @@ MAZY AI is an interactive desktop application built with Python and Pygame that 
     - Standard A* (distance traveled + Manhattan distance to exit)
     - Pure heuristic-based A* (Manhattan distance to exit only)
   - Ant Colony Optimization (ACO) - A nature-inspired probabilistic technique
+- **Algorithm Comparison**: Compare all algorithms' performance metrics:
+  - Cells explored (efficiency of exploration)
+  - Maximum memory usage (space complexity)
+  - Path length (solution optimality)
+  - Execution time (time complexity)
 - **Manual Navigation**: Traverse the maze yourself using W/A/S/D keys or arrow keys
 - **Visual Feedback**: Color-coded cells show:
   - Explored paths (blue)
@@ -27,6 +33,7 @@ MAZY AI is an interactive desktop application built with Python and Pygame that 
 - **Responsive Design**: Adapts to different screen sizes
 - **Intuitive Controls**: Easy-to-use buttons and dropdown menus
 - **Dynamic Scrolling**: Navigate through large mazes with ease
+- **Visual Performance Analysis**: Beautiful graphs and charts to compare algorithm efficiency
 
 ## Installation
 
@@ -68,13 +75,22 @@ MAZY AI is an interactive desktop application built with Python and Pygame that 
 
 ### Watching Algorithms Solve
 Click any algorithm button to watch it solve the current maze:
-
 - **Depth-First Search** - Often finds a solution quickly but not necessarily the shortest
 - **Breadth-First Search** - Guarantees the shortest path but explores more cells
 - **Uniform-Cost Search** - Similar to BFS for uniform-cost mazes
-- **A* Search - 1** - Balances path length and heuristic distance
-- **A* Search - 2** - Relies purely on distance to exit
+- **A Search - 1*** - Balances path length and heuristic distance
+- **A Search - 2*** - Relies purely on distance to exit
 - **Ant Colony Opt.** - Uses virtual pheromones to find optimal paths over multiple iterations
+
+### Comparing Algorithm Efficiency
+- Click the "Compare Algorithms" button to run all algorithms on the current maze
+- View comprehensive statistics including:
+  - Number of cells explored by each algorithm
+  - Maximum memory usage during execution
+  - Final path length (optimality of solution)
+  - Execution time for each algorithm
+- Visualize the comparison with interactive bar charts
+- See rankings of which algorithms perform best for different metrics
 
 ### Control the Visualization Speed
 - Click "Slower" to reduce the solving speed
@@ -90,15 +106,21 @@ Click any algorithm button to watch it solve the current maze:
 - Exit the application with the "Exit" button or press ESC
 
 ## Project Structure
+
 - `main.py` - Entry point and main game loop
 - `game.py` - Core game logic and algorithm management
 - `maze.py` - Maze generation and pathfinding algorithms
 - `config.py` - Application settings and constants
 - `ui_components.py` - Visual elements and rendering functions
 - `dropdown.py` - Custom dropdown menu implementation
+- `algorithm_comparison.py` - Algorithm comparison and statistics visualization
+- `stats.py` - Statistics collection and performance metrics
 - `mazy_ai_logo.icns` - App Logo file for macOS
-- `setup.py` - setup file for generating macOS executable using **py2app** package
-- `.gitignore` - ignore the unnecessary file for the github repo
+- `setup.py` - Setup file for generating macOS executable using py2app package
+- `.gitignore` - Ignore the unnecessary file for the GitHub repo
 
 ## Development
 This project is built with modular design principles, making it easy to extend with new algorithms or features. The codebase is structured to separate concerns between UI, game logic, and pathfinding algorithms.
+
+## Copyright
+© Dinesh Pandikona. All rights reserved 2025
