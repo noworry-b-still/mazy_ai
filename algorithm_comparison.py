@@ -864,5 +864,14 @@ def show_comparison_screen(screen, stats, back_callback):
             )
 
         pygame.display.flip()
+        # Add copyright notice (fixed at the bottom of the screen)
+        copyright_text = "© Dinesh Pandikona. All rights reserved 2025"
+        copyright_surf = pygame.font.SysFont("Arial", 16).render(
+            copyright_text, True, (200, 200, 200)
+        )
+        screen.blit(
+            copyright_surf,
+            (window_width - copyright_surf.get_width() - 15, window_height - 25),
+        )
 
     return True

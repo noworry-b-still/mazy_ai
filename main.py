@@ -6,14 +6,11 @@ from config import (
     WHITE,
     WINDOW_WIDTH,
     WINDOW_HEIGHT,
-    TITLE_FONT,
     TEXT_FONT,
     BUTTON_FONT,
     SMALL_FONT,
     ROW_OPTIONS,
     COL_OPTIONS,
-    BACKGROUND_COLOR,
-    HEADER_COLOR,
 )
 from dropdown import Dropdown
 from game import MAZY_AI
@@ -100,6 +97,18 @@ def main():
     def return_from_comparison():
         nonlocal comparison_active
         comparison_active = False
+
+    # Define color theme
+    theme = {
+        "header_bg": (40, 60, 80),  # Dark blue header
+        "header_accent": (255, 215, 0),  # Gold accent
+        "content_bg": (200, 215, 230),  # Light blue-gray background
+        "button_normal": (255, 255, 255),  # White buttons
+        "button_hover": (230, 240, 250),  # Light blue button hover
+        "button_text": (40, 60, 80),  # Dark blue text
+        "footer_bg": (60, 80, 100),  # Darker blue footer
+        "footer_text": (255, 255, 255),  # White footer text
+    }
 
     while running:
         # Handle comparison view if active
@@ -297,14 +306,39 @@ def main():
                     game.search_generator = None
                     break
 
-        # Fill background
-        screen.fill(BACKGROUND_COLOR)
+        # Draw gradient background
+        for y in range(WINDOW_HEIGHT):
+            # Calculate color for this row (linear interpolation)
+            ratio = y / WINDOW_HEIGHT
+            r = int(200 * (1 - ratio) + 180 * ratio)
+            g = int(215 * (1 - ratio) + 195 * ratio)
+            b = int(230 * (1 - ratio) + 210 * ratio)
+            color = (r, g, b)
 
-        # Draw header
-        header_height = 70
-        pygame.draw.rect(screen, HEADER_COLOR, (0, 0, WINDOW_WIDTH, header_height))
-        title_surf = TITLE_FONT.render("MAZY AI", True, BLACK)
-        screen.blit(title_surf, (20, 10))
+            # Draw horizontal line with this color
+            pygame.draw.line(screen, color, (0, y), (WINDOW_WIDTH, y))
+
+        # Draw header with gradient effect
+        header_height = 80
+        pygame.draw.rect(
+            screen, theme["header_bg"], (0, 0, WINDOW_WIDTH, header_height)
+        )
+
+        # Add decorative accent line
+        pygame.draw.rect(
+            screen, theme["header_accent"], (0, header_height - 3, WINDOW_WIDTH, 3)
+        )
+
+        # Draw title with shadow effect
+        title_surf = pygame.font.SysFont("Arial", 48, bold=True).render(
+            "MAZY AI", True, WHITE
+        )
+        shadow_offset = 2
+        shadow_surf = pygame.font.SysFont("Arial", 48, bold=True).render(
+            "MAZY AI", True, (20, 30, 40)
+        )
+        screen.blit(shadow_surf, (25 + shadow_offset, 15 + shadow_offset))
+        screen.blit(title_surf, (25, 15))
 
         # Calculate maze area dimensions
         margin_left = 50
@@ -315,6 +349,16 @@ def main():
         cell_size = min(available_w // game.cols, available_h // game.rows)
         maze_width = cell_size * game.cols
         maze_height = cell_size * game.rows
+
+        # Draw maze background and border
+        maze_bg = pygame.Rect(
+            margin_left - 10,
+            margin_top - scroll_y - 10,
+            maze_width + 20,
+            maze_height + 20,
+        )
+        pygame.draw.rect(screen, (220, 230, 240), maze_bg, border_radius=10)
+        pygame.draw.rect(screen, (100, 120, 140), maze_bg, width=3, border_radius=10)
 
         # Draw maze
         draw_maze(
@@ -328,19 +372,85 @@ def main():
             cell_size,
         )
 
+        # Draw settings panel background
+        settings_bg = pygame.Rect(sidebar_x - 20, 140, button_width + 40, 70)
+        pygame.draw.rect(screen, (220, 230, 240), settings_bg, border_radius=8)
+        pygame.draw.rect(screen, (100, 120, 140), settings_bg, width=2, border_radius=8)
+
         # Draw dropdowns with compact labels
         row_dropdown.draw(screen, "R:", scroll_y)  # Shorter label
         col_dropdown.draw(screen, "C:", scroll_y)  # Shorter label
 
-        # Draw algorithm buttons
+        # Draw algorithm buttons with enhanced style
         mouse_x, mouse_y = pygame.mouse.get_pos()
 
+        button_colors = {
+            "Depth-First Search": (220, 70, 70),  # Red
+            "Breadth-First Search": (70, 100, 230),  # Blue
+            "Uniform-Cost Search": (50, 200, 100),  # Green
+            "A* Search - 1": (255, 140, 0),  # Orange
+            "A* Search - 2": (148, 0, 211),  # Purple
+            "Ant Colony Opt.": (255, 105, 180),  # Pink
+            "New Maze": (60, 180, 200),  # Teal
+            "Compare Algorithms": (80, 100, 160),  # Navy
+        }
+
+        # Draw buttons with colored indicators
         for rect, text, mode in buttons:
             adjusted_rect = pygame.Rect(
                 rect.x, rect.y - scroll_y, rect.width, rect.height
             )
             is_hovered = adjusted_rect.collidepoint(mouse_x, mouse_y)
-            draw_button(screen, adjusted_rect, text, BUTTON_FONT, is_hovered)
+
+            # Get button color
+            button_color = button_colors.get(text, (100, 100, 100))
+
+            # Draw button with color indicator
+            pygame.draw.rect(
+                screen, theme["button_normal"], adjusted_rect, border_radius=6
+            )
+            pygame.draw.rect(
+                screen, (100, 120, 140), adjusted_rect, width=1, border_radius=6
+            )
+
+            # Add colored indicator
+            indicator_rect = pygame.Rect(
+                adjusted_rect.x + 5, adjusted_rect.y + 5, 8, adjusted_rect.height - 10
+            )
+            pygame.draw.rect(screen, button_color, indicator_rect, border_radius=2)
+
+            # Hover effect
+            if is_hovered:
+                hover_overlay = pygame.Rect(adjusted_rect)
+                pygame.draw.rect(
+                    screen,
+                    (*theme["button_hover"], 128),
+                    hover_overlay,
+                    border_radius=6,
+                )
+                # Add highlight
+                pygame.draw.rect(
+                    screen,
+                    (200, 200, 200),
+                    (
+                        adjusted_rect.x + 5,
+                        adjusted_rect.y + adjusted_rect.height - 5,
+                        adjusted_rect.width - 10,
+                        3,
+                    ),
+                    border_radius=2,
+                )
+
+            # Button text
+            text_surf = BUTTON_FONT.render(text, True, theme["button_text"])
+            screen.blit(
+                text_surf,
+                (
+                    adjusted_rect.x + 20,  # Offset to account for indicator
+                    adjusted_rect.y
+                    + (adjusted_rect.height - text_surf.get_height()) // 2,
+                ),
+            )
 
         # Draw speed buttons
         for rect, text, change in speed_buttons_rects:
@@ -358,35 +468,63 @@ def main():
             is_hovered = adjusted_rect.collidepoint(mouse_x, mouse_y)
             draw_button(screen, adjusted_rect, text, BUTTON_FONT, is_hovered)
 
-        # Draw search speed display
+        # Draw search speed display with improved style
+        speed_bg = pygame.Rect(
+            sidebar_x - 20, by + button_height + 5 - scroll_y, button_width + 40, 40
+        )
+        pygame.draw.rect(screen, (220, 230, 240), speed_bg, border_radius=8)
+        pygame.draw.rect(screen, (100, 120, 140), speed_bg, width=1, border_radius=8)
+
         speed_text = f"Search Speed: {game.search_speed}"
         speed_surf = TEXT_FONT.render(speed_text, True, BLACK)
-        screen.blit(speed_surf, (sidebar_x, by + button_height + 10 - scroll_y))
+        screen.blit(speed_surf, (sidebar_x, by + button_height + 15 - scroll_y))
 
         # Draw scrollbar if needed
         if content_height > WINDOW_HEIGHT:
             draw_scrollbar(screen, content_height, WINDOW_HEIGHT, scroll_y)
 
         # Draw footer with instructions
-        footer_y = WINDOW_HEIGHT - 70
-        footer_height = 70
+        footer_y = WINDOW_HEIGHT - 80
+        footer_height = 80
         pygame.draw.rect(
-            screen, HEADER_COLOR, (0, footer_y, WINDOW_WIDTH, footer_height)
+            screen, theme["footer_bg"], (0, footer_y, WINDOW_WIDTH, footer_height)
         )
+
+        # Draw footer accent line
+        pygame.draw.rect(screen, theme["header_accent"], (0, footer_y, WINDOW_WIDTH, 3))
 
         # Draw instructions in footer
         instr1 = TEXT_FONT.render(
-            "Use W/A/S/D or Arrow keys to move manually!", True, BLACK
+            "Use W/A/S/D or Arrow keys to move manually!", True, theme["footer_text"]
         )
         instr2 = TEXT_FONT.render(
-            "Or click algorithm buttons to visualize search!", True, BLACK
+            "Or click algorithm buttons to visualize search!",
+            True,
+            theme["footer_text"],
         )
-        screen.blit(instr1, (margin_left, footer_y + 10))
-        screen.blit(instr2, (margin_left, footer_y + 40))
+        screen.blit(instr1, (margin_left, footer_y + 15))
+        screen.blit(instr2, (margin_left, footer_y + 45))
 
-        # Draw A* search info
+        # Add copyright notice
+        copyright_text = "© Dinesh Pandikona. All rights reserved 2025"
+        copyright_surf = pygame.font.SysFont("Arial", 16).render(
+            copyright_text, True, (200, 200, 200)
+        )
+        screen.blit(
+            copyright_surf,
+            (
+                WINDOW_WIDTH - copyright_surf.get_width() - 15,
+                footer_y + footer_height - 25,
+            ),
+        )
+
+        # Draw A* search info as a floating info box
         note_y = margin_top + maze_height + 20 - scroll_y
         if note_y < footer_y - 100:  # Only show if there's room
+            info_bg = pygame.Rect(margin_left - 10, note_y - 10, 600, 90)
+            pygame.draw.rect(screen, (220, 230, 240, 200), info_bg, border_radius=8)
+            pygame.draw.rect(screen, (100, 120, 140), info_bg, width=2, border_radius=8)
+
             note_lines = [
                 "NOTE:",
                 "A* Search - 1: cost = (distance traveled) + (Manhattan distance to exit).",
@@ -394,7 +532,7 @@ def main():
             ]
             for i, line in enumerate(note_lines):
                 note_surf = SMALL_FONT.render(line, True, BLACK)
-                screen.blit(note_surf, (margin_left, note_y + i * 20))
+                screen.blit(note_surf, (margin_left + 10, note_y + i * 25))
 
         pygame.display.flip()
         clock.tick(60)
