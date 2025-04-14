@@ -1,6 +1,7 @@
 # maze.py
 import random
 from collections import deque
+from stats import AlgorithmStats, calculate_path_length
 
 
 class MazeCell:
@@ -86,16 +87,36 @@ def backtrack(search_map, paths_searched, index):
                 break
 
 
-def depth_first_search(cell_map, search_map, paths_searched):
+def depth_first_search(cell_map, search_map, paths_searched, collect_stats=False):
+    """Depth-First Search implementation that returns stats when collect_stats=True"""
+    if collect_stats:
+        stats = AlgorithmStats("Depth-First Search")
+        stats.start_timer()
+
     stack = [{"cell": 0, "neighbors": cell_map[0]}]
     search_map[0]["searched"] = True
+    cells_explored = 0
+    max_frontier_size = 0
+
     while stack:
+        max_frontier_size = max(max_frontier_size, len(stack))
         current = stack.pop()
         cell_idx = current["cell"]
+        cells_explored += 1
+
         if cell_idx == len(cell_map) - 1:
             search_map[cell_idx]["inSolution"] = True
             backtrack(search_map, paths_searched, cell_idx)
+
+            if collect_stats:
+                stats.cells_explored = cells_explored
+                stats.max_frontier_size = max_frontier_size
+                stats.path_length = calculate_path_length(paths_searched)
+                stats.stop_timer()
+                return stats
+
             return True
+
         neighbors = current["neighbors"]
         for direction in ["right", "bottom", "left", "top"]:
             n_idx = getattr(neighbors, direction)["neighborIndex"]
@@ -107,20 +128,49 @@ def depth_first_search(cell_map, search_map, paths_searched):
                 stack.append({"cell": n_idx, "neighbors": cell_map[n_idx]})
                 paths_searched.append({"from": cell_idx, "to": n_idx})
                 search_map[n_idx]["searched"] = True
-                yield
+                if not collect_stats:
+                    yield
+
+    if collect_stats:
+        stats.cells_explored = cells_explored
+        stats.max_frontier_size = max_frontier_size
+        stats.path_length = 0  # No path found
+        stats.stop_timer()
+        return stats
+
     return False
 
 
-def breadth_first_search(cell_map, search_map, paths_searched):
+def breadth_first_search(cell_map, search_map, paths_searched, collect_stats=False):
+    """Breadth-First Search implementation that returns stats when collect_stats=True"""
+    if collect_stats:
+        stats = AlgorithmStats("Breadth-First Search")
+        stats.start_timer()
+
     queue = deque([{"cell": 0, "neighbors": cell_map[0]}])
     search_map[0]["searched"] = True
+    cells_explored = 0
+    max_frontier_size = 0
+
     while queue:
+        max_frontier_size = max(max_frontier_size, len(queue))
         current = queue.popleft()
         cell_idx = current["cell"]
+        cells_explored += 1
+
         if cell_idx == len(cell_map) - 1:
             search_map[cell_idx]["inSolution"] = True
             backtrack(search_map, paths_searched, cell_idx)
+
+            if collect_stats:
+                stats.cells_explored = cells_explored
+                stats.max_frontier_size = max_frontier_size
+                stats.path_length = calculate_path_length(paths_searched)
+                stats.stop_timer()
+                return stats
+
             return True
+
         neighbors = current["neighbors"]
         for direction in ["left", "right", "top", "bottom"]:
             n_idx = getattr(neighbors, direction)["neighborIndex"]
@@ -132,11 +182,27 @@ def breadth_first_search(cell_map, search_map, paths_searched):
                 queue.append({"cell": n_idx, "neighbors": cell_map[n_idx]})
                 paths_searched.append({"from": cell_idx, "to": n_idx})
                 search_map[n_idx]["searched"] = True
-                yield
+                if not collect_stats:
+                    yield
+
+    if collect_stats:
+        stats.cells_explored = cells_explored
+        stats.max_frontier_size = max_frontier_size
+        stats.path_length = 0  # No path found
+        stats.stop_timer()
+        return stats
+
     return False
 
 
-def a_star_search(cell_map, search_map, paths_searched, rows, cols, choice):
+def a_star_search(
+    cell_map, search_map, paths_searched, rows, cols, choice, collect_stats=False
+):
+    """A* Search implementation that returns stats when collect_stats=True"""
+    if collect_stats:
+        stats = AlgorithmStats(f"A* Search ({'f = g + h' if choice == 1 else 'f = h'})")
+        stats.start_timer()
+
     manhattan_map = []
     for r in range(rows):
         for c in range(cols):
@@ -145,7 +211,12 @@ def a_star_search(cell_map, search_map, paths_searched, rows, cols, choice):
     manhattan_map[0]["costToArrive"] = 0
     search_map[0]["searched"] = True
     open_list = [{"cell": 0, "neighbors": cell_map[0]}]
+    cells_explored = 0
+    max_frontier_size = 0
+
     while open_list:
+        max_frontier_size = max(max_frontier_size, len(open_list))
+
         smallest_cost = float("inf")
         smallest_i = 0
         for i, item in enumerate(open_list):
@@ -160,12 +231,24 @@ def a_star_search(cell_map, search_map, paths_searched, rows, cols, choice):
             if cost < smallest_cost:
                 smallest_cost = cost
                 smallest_i = i
+
         current = open_list.pop(smallest_i)
         cell_idx = current["cell"]
+        cells_explored += 1
+
         if cell_idx == len(cell_map) - 1:
             search_map[cell_idx]["inSolution"] = True
             backtrack(search_map, paths_searched, cell_idx)
+
+            if collect_stats:
+                stats.cells_explored = cells_explored
+                stats.max_frontier_size = max_frontier_size
+                stats.path_length = calculate_path_length(paths_searched)
+                stats.stop_timer()
+                return stats
+
             return True
+
         neighbors = current["neighbors"]
         for direction in ["left", "right", "top", "bottom"]:
             n_idx = getattr(neighbors, direction)["neighborIndex"]
@@ -178,41 +261,59 @@ def a_star_search(cell_map, search_map, paths_searched, rows, cols, choice):
                         open_list.append({"cell": n_idx, "neighbors": cell_map[n_idx]})
                         paths_searched.append({"from": cell_idx, "to": n_idx})
                         search_map[n_idx]["searched"] = True
-                        yield
+                        if not collect_stats:
+                            yield
+
+    if collect_stats:
+        stats.cells_explored = cells_explored
+        stats.max_frontier_size = max_frontier_size
+        stats.path_length = 0  # No path found
+        stats.stop_timer()
+        return stats
+
     return False
 
 
-def uniform_cost_search(cell_map, search_map, paths_searched):
+def uniform_cost_search(cell_map, search_map, paths_searched, collect_stats=False):
+    """Uniform Cost Search implementation that returns stats when collect_stats=True"""
     import heapq
 
-    # Priority queue with cost as priority (starting with 0 cost at cell 0)
+    if collect_stats:
+        stats = AlgorithmStats("Uniform-Cost Search")
+        stats.start_timer()
+
     pq = [(0, 0, {"cell": 0, "neighbors": cell_map[0]})]
     search_map[0]["searched"] = True
-    cost_so_far = {0: 0}  # Dictionary to track cost to reach each cell
+    cost_so_far = {0: 0}
+    cells_explored = 0
+    max_frontier_size = 0
 
     while pq:
+        max_frontier_size = max(max_frontier_size, len(pq))
         current_cost, _, current = heapq.heappop(pq)
         cell_idx = current["cell"]
+        cells_explored += 1
 
-        # If we've reached the goal, reconstruct path and return
         if cell_idx == len(cell_map) - 1:
             search_map[cell_idx]["inSolution"] = True
             backtrack(search_map, paths_searched, cell_idx)
+
+            if collect_stats:
+                stats.cells_explored = cells_explored
+                stats.max_frontier_size = max_frontier_size
+                stats.path_length = calculate_path_length(paths_searched)
+                stats.stop_timer()
+                return stats
+
             return True
 
         neighbors = current["neighbors"]
         for direction in ["left", "right", "top", "bottom"]:
             n_idx = getattr(neighbors, direction)["neighborIndex"]
-
-            # Check if this is a valid connected neighbor
             if n_idx != -1 and getattr(neighbors, direction)["connection"]:
-                # Cost is always 1 for each step in this maze implementation
                 new_cost = current_cost + 1
-
-                # If we haven't visited this neighbor or found a better path
                 if n_idx not in cost_so_far or new_cost < cost_so_far[n_idx]:
                     cost_so_far[n_idx] = new_cost
-                    # Add to priority queue with priority = cost
                     heapq.heappush(
                         pq,
                         (
@@ -221,37 +322,49 @@ def uniform_cost_search(cell_map, search_map, paths_searched):
                             {"cell": n_idx, "neighbors": cell_map[n_idx]},
                         ),
                     )
-
                     if not search_map[n_idx]["searched"]:
                         paths_searched.append({"from": cell_idx, "to": n_idx})
                         search_map[n_idx]["searched"] = True
-                        yield
+                        if not collect_stats:
+                            yield
+
+    if collect_stats:
+        stats.cells_explored = cells_explored
+        stats.max_frontier_size = max_frontier_size
+        stats.path_length = 0  # No path found
+        stats.stop_timer()
+        return stats
 
     return False
 
 
-def ant_colony_optimization(cell_map, search_map, paths_searched, rows, cols):
-    # Constants for ACO
-    num_ants = 10  # Number of ants per iteration
-    num_iterations = 5  # Number of iterations
-    alpha = 1.0  # Pheromone importance
-    beta = 2.0  # Heuristic importance
-    evaporation_rate = 0.5  # Pheromone evaporation rate
+def ant_colony_optimization(
+    cell_map, search_map, paths_searched, rows, cols, collect_stats=False
+):
+    """Ant Colony Optimization implementation that returns stats when collect_stats=True"""
+    if collect_stats:
+        stats = AlgorithmStats("Ant Colony Optimization")
+        stats.start_timer()
 
-    # Initialize pheromone on all connections
+    num_ants = 10
+    num_iterations = 5
+    alpha = 1.0
+    beta = 2.0
+    evaporation_rate = 0.5
+
     pheromone = {}
     for i in range(len(cell_map)):
         neighbors = cell_map[i]
         for direction in ["left", "right", "top", "bottom"]:
             n_idx = getattr(neighbors, direction)["neighborIndex"]
             if n_idx != -1 and getattr(neighbors, direction)["connection"]:
-                # Store pheromone for both directions (edge i->j and j->i)
-                pheromone[(i, n_idx)] = 0.1  # Initial pheromone value
+                pheromone[(i, n_idx)] = 0.1
 
     best_path = None
     best_path_length = float("inf")
+    cells_explored = 0
+    max_frontier_size = 0
 
-    # Calculate heuristic (Manhattan distance to goal)
     exit_idx = rows * cols - 1
     exit_row = exit_idx // cols
     exit_col = exit_idx % cols
@@ -261,19 +374,18 @@ def ant_colony_optimization(cell_map, search_map, paths_searched, rows, cols):
         col = idx % cols
         return abs(row - exit_row) + abs(col - exit_col)
 
-    # Main ACO loop
     for iteration in range(num_iterations):
         all_paths = []
         all_path_lengths = []
 
-        # Each ant tries to find a path
         for ant in range(num_ants):
-            current_node = 0  # Start at the entrance
+            current_node = 0
             path = [current_node]
             visited = {0: True}
+            ant_cells_explored = 0
 
             while current_node != exit_idx:
-                # Get all possible next nodes
+                ant_cells_explored += 1
                 neighbors = cell_map[current_node]
                 possible_moves = []
 
@@ -287,38 +399,25 @@ def ant_colony_optimization(cell_map, search_map, paths_searched, rows, cols):
                         possible_moves.append(n_idx)
 
                 if not possible_moves:
-                    # No valid moves, backtrack
                     if len(path) > 1:
                         path.pop()
                         current_node = path[-1]
                         continue
                     else:
-                        # Can't even backtrack, failed
                         break
 
-                # Calculate probabilities based on pheromone and heuristic
                 probabilities = []
                 for next_node in possible_moves:
-                    # Get pheromone amount (or default if not set)
                     tau = pheromone.get((current_node, next_node), 0.1)
-                    # Heuristic value - inverse of distance to goal
-                    eta = 1.0 / (
-                        get_heuristic(next_node) + 1
-                    )  # Add 1 to avoid division by zero
-
+                    eta = 1.0 / (get_heuristic(next_node) + 1)
                     prob = (tau**alpha) * (eta**beta)
                     probabilities.append(prob)
 
-                # Normalize probabilities
                 total = sum(probabilities)
                 if total == 0:
-                    # Equal probabilities if all are zero
                     probabilities = [1.0 / len(possible_moves)] * len(possible_moves)
                 else:
                     probabilities = [p / total for p in probabilities]
-
-                # Choose next node based on probabilities
-                import random
 
                 r = random.random()
                 cumulative_prob = 0
@@ -330,52 +429,58 @@ def ant_colony_optimization(cell_map, search_map, paths_searched, rows, cols):
                         chosen_idx = i
                         break
 
-                # Move to chosen node
                 next_node = possible_moves[chosen_idx]
                 path.append(next_node)
                 visited[next_node] = True
                 current_node = next_node
 
-                # For visualization, mark as searched
                 if not search_map[next_node]["searched"]:
                     search_map[next_node]["searched"] = True
-                    # Add to paths_searched for backtracking
                     paths_searched.append({"from": path[-2], "to": next_node})
-                    yield
+                    if not collect_stats:
+                        yield
 
-            # If path found, save it
+            cells_explored += ant_cells_explored
+            max_frontier_size = max(max_frontier_size, len(visited))
+
             if current_node == exit_idx:
-                path_length = len(path) - 1  # Number of steps
+                path_length = len(path) - 1
                 all_paths.append(path)
                 all_path_lengths.append(path_length)
 
-                # Update best path if better
                 if path_length < best_path_length:
                     best_path = path
                     best_path_length = path_length
 
-        # Update pheromones
-        # First evaporate all pheromones
         for edge in pheromone:
             pheromone[edge] *= 1 - evaporation_rate
 
-        # Then add new pheromones from successful paths
         for i, path in enumerate(all_paths):
             path_length = all_path_lengths[i]
-            # Amount of pheromone to deposit
             deposit = 1.0 / path_length if path_length > 0 else 0
-
-            # Deposit pheromone along the path
             for j in range(len(path) - 1):
                 edge = (path[j], path[j + 1])
                 pheromone[edge] = pheromone.get(edge, 0) + deposit
 
-    # Highlight the best path if found
     if best_path:
         for i in range(len(best_path)):
             node = best_path[i]
             search_map[node]["inSolution"] = True
-            # No need to yield here as we're just marking the solution
+
+        if collect_stats:
+            stats.cells_explored = cells_explored
+            stats.max_frontier_size = max_frontier_size
+            stats.path_length = best_path_length
+            stats.stop_timer()
+            return stats
+
         return True
+
+    if collect_stats:
+        stats.cells_explored = cells_explored
+        stats.max_frontier_size = max_frontier_size
+        stats.path_length = 0  # No path found
+        stats.stop_timer()
+        return stats
 
     return False

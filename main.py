@@ -18,6 +18,7 @@ from config import (
 from dropdown import Dropdown
 from game import MAZY_AI
 from ui_components import draw_maze, draw_scrollbar, draw_button
+from algorithm_comparison import compare_algorithms, show_comparison_screen
 
 pygame.init()
 # Start in fullscreen mode
@@ -33,6 +34,8 @@ def main():
     max_scroll_y = 0
     running = True
     dragging_scrollbar = False
+    comparison_active = False
+    comparison_results = None
 
     # Create a default game with 20x20
     game = MAZY_AI(ROW_OPTIONS[2], COL_OPTIONS[2])
@@ -79,6 +82,7 @@ def main():
         ("Uniform-Cost Search", 6),
         ("Ant Colony Opt.", 7),
         ("New Maze", 0),
+        ("Compare Algorithms", "compare"),  # New compare button
     ]
 
     # Speed control buttons
@@ -93,7 +97,23 @@ def main():
         ("Exit", "exit"),
     ]
 
+    def return_from_comparison():
+        nonlocal comparison_active
+        comparison_active = False
+
     while running:
+        # Handle comparison view if active
+        if comparison_active:
+            if comparison_results is None:
+                # Run the comparison
+                comparison_results = compare_algorithms(game)
+
+            # Show the comparison screen
+            show_comparison_screen(screen, comparison_results, return_from_comparison)
+            comparison_active = False
+            comparison_results = None
+            continue
+
         # Recalculate dynamic values for screen size
         WINDOW_WIDTH, WINDOW_HEIGHT = screen.get_size()
 
@@ -204,6 +224,9 @@ def main():
                                 if adjusted_rect.collidepoint(mx, my):
                                     if mode == 0:
                                         game.reset()
+                                    elif mode == "compare":
+                                        comparison_active = True
+                                        comparison_results = None
                                     else:
                                         game.start_search(mode)
 
